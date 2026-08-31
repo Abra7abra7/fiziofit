@@ -1,16 +1,20 @@
 # FizioFit API gateway — zjednocuje Supabase služby pod jednu adresu
-# Browser volá http://62.238.118.51:3004/auth/v1/... atd.
+# Browser volá http://62.238.118.51:3004/auth/v1/signup → auth:9999/signup
 :80 {
-	handle /auth/* {
+	handle /auth/v1/* {
+		uri strip_prefix /auth/v1
 		reverse_proxy auth:9999
 	}
-	handle /rest/* {
+	handle /rest/v1/* {
+		uri strip_prefix /rest/v1
 		reverse_proxy rest:3000
 	}
-	handle /storage/* {
+	handle /storage/v1/* {
+		uri strip_prefix /storage/v1
 		reverse_proxy storage:5000
 	}
-	handle /realtime/* {
+	handle /realtime/v1/* {
+		uri strip_prefix /realtime/v1
 		reverse_proxy realtime:4000
 	}
 }

@@ -99,12 +99,13 @@ services:
 
   # === REALTIME (websocket pre live updaty) ===
   realtime:
-    image: supabase/realtime:v2.29.9
+    image: supabase/realtime:v2.76.5
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     environment:
+      APP_NAME: fiziofit-realtime
       PORT: 4000
       DB_HOST: db
       DB_PORT: 5432

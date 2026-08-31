@@ -7,6 +7,14 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+-- === SCHEMAS (auth/storage potrebujú Supabase služby) ===
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE SCHEMA IF NOT EXISTS storage;
+
+-- GoTrue a StorageAdmin potrebujú search_path na svoje schémy
+ALTER ROLE supabase_auth_admin IN DATABASE fiziofit SET search_path TO auth;
+ALTER ROLE supabase_storage_admin IN DATABASE fiziofit SET search_path TO storage;
+
 -- === SUPABASE ROLES ===
 DO $$
 BEGIN

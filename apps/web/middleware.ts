@@ -44,6 +44,8 @@ export async function updateSession(request: NextRequest) {
   return supabaseResponse
 }
 
+export const middleware = updateSession
+
 export const config = {
   runtime: 'nodejs',
   matcher: [

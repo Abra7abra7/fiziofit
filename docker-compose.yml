@@ -1,0 +1,184 @@
+# Self-hosted Supabase + Next.js pre FizioFit
+# Hetzner VPS — jedna služba, všetko v EÚ
+
+version: "3.8"
+
+services:
+  # === DATABÁZA ===
+  db:
+    image: supabase/postgres:15.6.1.105
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./supabase/schema.sql:/docker-entrypoint-initdb.d/00-schema.sql
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: fiziofit
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # === SUPABASE AUTH ===
+  auth:
+    image: supabase/gotrue:v2.164.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/fiziofit
+      GOTRUE_SITE_URL: https://${DOMAIN}
+      GOTRUE_MAILER_AUTOCONFIRM: "false"
+      GOTRUE_LOG_LEVEL: info
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_SMTP_HOST: ${SMTP_HOST}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT}
+      GOTRUE_SMTP_USER: ${SMTP_USER}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL}
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_EXP: 86400
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_MAILER_URLPATHS_INVITE: /auth/callback
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/callback
+      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/callback
+      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: "Potvrdenie registrácie — FizioFit"
+      GOTRUE_MAILER_TEMPLATES_CONFIRMATION: |
+        <h2>Vitajte vo FizioFit!</h2>
+        <p>Kliknite pre potvrdenie emailu:</p>
+        <a href="{{ .ConfirmationURL }}">Potvrdiť email</a>
+    ports:
+      - "9999:9999"
+
+  # === SUPABASE REST API (PostgREST) ===
+  rest:
+    image: postgrest/postgrest:v12.2.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/fiziofit
+      PGRST_DB_SCHEMA: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_AGGREGATES_ENABLED: "true"
+    ports:
+      - "3001:3000"
+
+  # === SUPABASE STUDIO (admin panel, len interne) ===
+  studio:
+    image: supabase/studio:20241002-cb4f78f
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      STUDIO_PG_META_URL: http://meta:8080
+      SUPABASE_URL: http://rest:3000
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_KEY}
+    ports:
+      - "3002:3000"
+
+  # === PG META (pre Studio) ===
+  meta:
+    image: supabase/pgmeta:v2.8.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/fiziofit
+      PG_META_JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8080:8080"
+
+  # === REALTIME (websocket pre live updaty) ===
+  realtime:
+    image: supabase/realtime:v2.29.9
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: fiziofit
+      JWT_SECRET: ${JWT_SECRET}
+      REPLICATION_MODE: RLS
+    ports:
+      - "4000:4000"
+
+  # === STORAGE (súbory, fotky, PDF) ===
+  storage:
+    image: supabase/storage-api:v1.11.6
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_KEY: ${SERVICE_KEY}
+      POSTGREST_URL: http://rest:3000
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: default
+      REGION: eu-central
+      GLOBAL_S3_BUCKET: fiziofit
+    volumes:
+      - storage-data:/var/lib/storage
+    ports:
+      - "5000:5000"
+
+  # === NEXT.JS APP ===
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - auth
+      - rest
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_SUPABASE_URL: http://rest:3000
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_KEY}
+      NEXT_PUBLIC_SITE_URL: https://${DOMAIN}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "3000:3000"
+
+  # === CADDY (reverzný proxy, TLS) ===
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy-data:/data
+      - caddy-config:/config
+    environment:
+      DOMAIN: ${DOMAIN}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+
+volumes:
+  pgdata:
+  storage-data:
+  caddy-data:
+  caddy-config:

@@ -1,0 +1,7 @@
+node_modules/
+.next/
+.env
+*.tsbuildinfo
+pgdata/
+caddy-data/
+caddy-config/

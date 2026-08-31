@@ -1,6 +1,25 @@
 # FizioFit API gateway — zjednocuje Supabase služby pod jednu adresu
 # Browser volá http://62.238.118.51:3004/auth/v1/signup → auth:9999/signup
 :80 {
+	# CORS preflight — browser pýta pred POST/GET s apikey hlavičkou
+	@options {
+		method OPTIONS
+	}
+	respond @options 204 {
+		header Access-Control-Allow-Origin *
+		header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+		header Access-Control-Allow-Headers "apikey, authorization, content-type, x-client-info, x-supabase-api-version, x-sb-transport"
+		header Access-Control-Max-Age 86400
+	}
+
+	# CORS na všetky proxied odpovede
+	header {
+		Access-Control-Allow-Origin *
+		Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+		Access-Control-Allow-Headers "apikey, authorization, content-type, x-client-info, x-supabase-api-version, x-sb-transport"
+		Access-Control-Max-Age 86400
+	}
+
 	handle /auth/v1/* {
 		uri strip_prefix /auth/v1
 		reverse_proxy auth:9999

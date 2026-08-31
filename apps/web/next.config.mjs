@@ -1,3 +1,5 @@
+import withSerwistInit from '@serwist/next'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
@@ -6,14 +8,11 @@ const nextConfig = {
       { protocol: 'https', hostname: '**' },
     ],
   },
-};
+}
 
-// PWA config
-const withSerwist = require('@serwist/next')({
+export default withSerwistInit({
   swSrc: 'app/sw.ts',
   swDest: 'public/sw.js',
   reloadOnOnline: true,
   register: true,
-});
-
-module.exports = withSerwist(nextConfig);
+})(nextConfig)

@@ -30,7 +30,7 @@ export function ToastContainer() {
 
   useEffect(() => {
     listeners.add(setItems)
-    return () => listeners.delete(setItems)
+    return () => { listeners.delete(setItems) }
   }, [])
 
   if (items.length === 0) return null

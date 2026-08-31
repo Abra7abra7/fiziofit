@@ -25,7 +25,7 @@ export default function DiagnosticsPage() {
   const { profile, loading } = useApp()
   const router = useRouter()
   const supabase = createClient()
-  const [mode, setMode] = useState<'list' | 'run'>('list')
+  const [mode, setMode] = useState<'list' | 'run' | 'consent'>('list')
   const [results, setResults] = useState<any[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [answers, setAnswers] = useState<Record<string, any>>({})

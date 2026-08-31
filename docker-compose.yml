@@ -29,6 +29,7 @@ services:
         condition: service_healthy
     environment:
       GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
       GOTRUE_API_EXTERNAL_URL: http://62.238.118.51:9999
       API_EXTERNAL_URL: http://62.238.118.51:9999
       GOTRUE_DB_DRIVER: postgres

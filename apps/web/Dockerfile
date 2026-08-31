@@ -4,7 +4,7 @@ FROM node:20-alpine AS base
 FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm install --production --no-optional
+RUN npm ci
 
 # Build
 FROM base AS builder
@@ -25,6 +25,9 @@ RUN mkdir .next && chown nextjs:nodejs .next
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Production dependencies only
+COPY --from=deps /app/node_modules ./node_modules
 
 USER nextjs
 EXPOSE 3000

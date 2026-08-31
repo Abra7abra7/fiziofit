@@ -149,7 +149,7 @@ services:
       context: ./apps/web
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_SUPABASE_URL: http://rest:3000
+        NEXT_PUBLIC_SUPABASE_URL: http://62.238.118.51:3004
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${ANON_KEY}
         NEXT_PUBLIC_SITE_URL: http://62.238.118.51:3099
     restart: unless-stopped
@@ -165,6 +165,20 @@ services:
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "3099:3000"
+
+  # === API GATEWAY (browser → Supabase služby) ===
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "3004:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - auth
+      - rest
+      - storage
+      - realtime
 
 volumes:
   pgdata:

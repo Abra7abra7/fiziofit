@@ -1,31 +1,16 @@
-{
-    email {$ADMIN_EMAIL}
-    admin off
-}
-
-{$DOMAIN} {
-    reverse_proxy web:3000
-
-    # Static assets cache
-    @static {
-        path *.ico *.css *.js *.webp *.png *.svg *.woff2 *.json
-    }
-    header @static Cache-Control "public, max-age=31536000, immutable"
-
-    # Security headers
-    header {
-        X-Content-Type-Options "nosniff"
-        X-Frame-Options "DENY"
-        X-XSS-Protection "1; mode=block"
-        Referrer-Policy "strict-origin-when-cross-origin"
-        Permissions-Policy "camera=(), microphone=(), geolocation=()"
-    }
-
-    # HTTP -> HTTPS redirect
-    redir https://{$DOMAIN}{uri}
-}
-
-# Health check endpoint
-health.marianstancik.dev {
-    respond "OK" 200
+# FizioFit API gateway — zjednocuje Supabase služby pod jednu adresu
+# Browser volá http://62.238.118.51:3004/auth/v1/... atd.
+:80 {
+	handle /auth/* {
+		reverse_proxy auth:9999
+	}
+	handle /rest/* {
+		reverse_proxy rest:3000
+	}
+	handle /storage/* {
+		reverse_proxy storage:5000
+	}
+	handle /realtime/* {
+		reverse_proxy realtime:4000
+	}
 }

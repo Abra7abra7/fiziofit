@@ -164,25 +164,8 @@ services:
       NEXT_PUBLIC_SITE_URL: https://${DOMAIN}
       JWT_SECRET: ${JWT_SECRET}
     ports:
-      - "3000:3000"
-
-  # === CADDY (reverzný proxy, TLS) ===
-  caddy:
-    image: caddy:2.8-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy-data:/data
-      - caddy-config:/config
-    environment:
-      DOMAIN: ${DOMAIN}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      - "3099:3000"
 
 volumes:
   pgdata:
   storage-data:
-  caddy-data:
-  caddy-config:

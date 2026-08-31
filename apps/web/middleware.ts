@@ -45,6 +45,7 @@ export async function updateSession(request: NextRequest) {
 }
 
 export const config = {
+  runtime: 'nodejs',
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico|icons/|sw.js|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],

@@ -3,8 +3,8 @@ FROM node:20-alpine AS base
 # Install deps
 FROM base AS deps
 WORKDIR /app
-COPY package.json ./
-RUN npm ci --only=production
+COPY package.json package-lock.json ./
+RUN npm install --production --no-optional
 
 # Build
 FROM base AS builder

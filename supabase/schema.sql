@@ -7,6 +7,26 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+-- === SUPABASE ROLES ===
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'anon') THEN
+    CREATE ROLE anon NOLOGIN;
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'authenticated') THEN
+    CREATE ROLE authenticated NOLOGIN;
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'service_role') THEN
+    CREATE ROLE service_role NOLOGIN;
+  END IF;
+END
+$$;
+
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated, service_role;
+
 -- === ENUMS ===
 CREATE TYPE user_role AS ENUM ('admin', 'doctor', 'physio', 'trainer', 'patient');
 CREATE TYPE appointment_status AS ENUM ('pending', 'confirmed', 'in_progress', 'completed', 'cancelled');

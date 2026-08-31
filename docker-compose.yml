@@ -30,6 +30,7 @@ services:
     environment:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_EXTERNAL_URL: http://62.238.118.51:9999
+      API_EXTERNAL_URL: http://62.238.118.51:9999
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/fiziofit
       GOTRUE_SITE_URL: http://62.238.118.51:3099
@@ -110,6 +111,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: fiziofit
       JWT_SECRET: ${JWT_SECRET}
+      SECRET_KEY_BASE: dc51a2493a1329bfe570933fa23e8adb8c22a6b63445d2b9e23a11774d017325
       REPLICATION_MODE: RLS
       RLIMIT_NOFILE: "1024"
     ports:

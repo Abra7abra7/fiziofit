@@ -573,6 +573,10 @@ CREATE POLICY "admin vidí všetky súhlasy"
     ON consent_logs FOR SELECT
     USING (auth.user_role() = 'admin');
 
+CREATE POLICY "pacient si môže uložiť vlastný súhlas"
+    ON consent_logs FOR INSERT
+    WITH CHECK (profile_id = auth.uid() AND auth.uid() IN (SELECT id FROM profiles WHERE id = auth.uid()));
+
 -- === DOCUMENTS ===
 CREATE POLICY "pacient vidí svoje dokumenty"
     ON documents FOR SELECT

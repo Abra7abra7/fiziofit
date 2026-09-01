@@ -1,5 +1,4 @@
-# FizioFit API gateway — CORS rieši každý backend samostatne
-# Caddy len handle preflight (OPTIONS) aby short-circuitol
+# FizioFit API gateway — CORS preflight obslúži Caddy, skutočné requesty idú transparentne
 :80 {
 	@preflight {
 		method OPTIONS
@@ -7,12 +6,12 @@
 	handle @preflight {
 		header Access-Control-Allow-Origin "*"
 		header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-		header Access-Control-Allow-Headers "apikey, authorization, content-type, x-client-info, x-supabase-api-version, x-sb-transport"
+		header Access-Control-Allow-Headers "apikey, authorization, content-type, accept-profile, prefer, x-client-info, x-sb-transport, x-supabase-api-version"
 		header Access-Control-Max-Age "0"
 		respond 204
 	}
 
-	# Proxy routes — backendy (GoTrue, PostgREST) si CORS riešia samy
+	# Proxy routes — backendy pridávajú CORS hlavičky na skutočné requesty
 	handle /auth/v1/* {
 		uri strip_prefix /auth/v1
 		reverse_proxy auth:9999

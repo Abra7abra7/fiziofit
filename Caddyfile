@@ -8,7 +8,7 @@
 		header Access-Control-Allow-Origin "*"
 		header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
 		header Access-Control-Allow-Headers "apikey, authorization, content-type, x-client-info, x-supabase-api-version, x-sb-transport"
-		header Access-Control-Max-Age "86400"
+		header Access-Control-Max-Age "0"
 		respond 204
 	}
 

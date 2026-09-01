@@ -35,18 +35,36 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       const result = await signUp(email, password, fullName)
-      // Session z signUp nastaviť aj na našom Supabase clientovi
+      const token = result?.session?.access_token
+      const userId = result?.user?.id
+
+      // Uložiť profilové dáta — použiť raw fetch s Bearer tokenom,
+      // lebo @supabase/ssr cookies sa neposielajú na port :3004
+      if (userId && token) {
+        const res = await fetch('http://62.238.118.51:3004/rest/v1/profiles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+            'Authorization': `Bearer ${token}`,
+            'Prefer': 'resolution=merge-duplicates',
+          },
+          body: JSON.stringify({
+            id: userId,
+            email,
+            full_name: fullName,
+            phone,
+            role: 'patient',
+          }),
+        })
+        if (!res.ok) console.warn('Profile upsert failed:', await res.text())
+      }
+
+      // Session nastaviť pre AuthListener
       if (result?.session) {
         await supabase.auth.setSession(result.session)
       }
-      // Uložiť profilové dáta
-      await supabase.from('profiles').upsert({
-        id: result.user?.id,
-        email,
-        full_name: fullName,
-        phone,
-        role: 'patient',
-      })
+
       setStep('consents')
     } catch (err: any) {
       setError(err.message || 'Chyba pri registrácii')

@@ -34,9 +34,10 @@ export default function RegisterPage() {
 
     setLoading(true)
     try {
-      await signUp(email, password, fullName)
+      const result = await signUp(email, password, fullName)
       // Uložiť profilové dáta
       await supabase.from('profiles').upsert({
+        id: result.user?.id,
         email,
         full_name: fullName,
         phone,

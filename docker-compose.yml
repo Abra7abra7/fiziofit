@@ -40,6 +40,7 @@ services:
       GOTRUE_LOG_LEVEL: info
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
       GOTRUE_JWT_EXP: 86400
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
       GOTRUE_DISABLE_SIGNUP: "false"
       GOTRUE_MAILER_URLPATHS_INVITE: /auth/callback
       GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/callback

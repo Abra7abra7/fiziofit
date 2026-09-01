@@ -35,36 +35,9 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       const result = await signUp(email, password, fullName)
-      const token = result?.session?.access_token
-      const userId = result?.user?.id
 
-      // Uložiť profilové dáta — použiť raw fetch s Bearer tokenom,
-      // lebo @supabase/ssr cookies sa neposielajú na port :3004
-      if (userId && token) {
-        // Uložiť token pre loadProfile fallback (sessionStorage pretrvá navigáciu)
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('sb-refresh-token', token)
-        }
-        const res = await fetch('http://62.238.118.51:3004/rest/v1/profiles', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-            'Authorization': `Bearer ${token}`,
-            'Prefer': 'resolution=merge-duplicates',
-          },
-          body: JSON.stringify({
-            id: userId,
-            email,
-            full_name: fullName,
-            phone,
-            role: 'patient',
-          }),
-        })
-        if (!res.ok) console.warn('Profile upsert failed:', await res.text())
-      }
-
-      // Session nastaviť pre AuthListener
+      // Profile sa vytvorí automaticky DB triggerom na auth.users INSERT
+      // Nastaviť session pre AuthListener v context.tsx
       if (result?.session) {
         await supabase.auth.setSession(result.session)
       }
@@ -88,8 +61,7 @@ export default function RegisterPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('User not found')
 
-      // Zalogovať súhlasy
-      const ip = '0.0.0.0' // V produkcii reálna IP
+      const ip = '0.0.0.0'
       const logs = [
         { profile_id: user.id, consent_type: 'gdpr_general', action: 'granted', document_version: 'v1.0', ip_address: ip },
         { profile_id: user.id, consent_type: 'terms_conditions', action: 'granted', document_version: 'v1.0', ip_address: ip },

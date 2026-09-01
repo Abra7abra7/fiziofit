@@ -35,6 +35,10 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       const result = await signUp(email, password, fullName)
+      // Session z signUp nastaviť aj na našom Supabase clientovi
+      if (result?.session) {
+        await supabase.auth.setSession(result.session)
+      }
       // Uložiť profilové dáta
       await supabase.from('profiles').upsert({
         id: result.user?.id,

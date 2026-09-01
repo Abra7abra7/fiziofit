@@ -35,13 +35,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
 
   const loadProfile = async () => {
-    const { data: { user: u } } = await supabase.auth.getUser()
-    setUser(u)
-    if (u) {
-      const { data } = await supabase.from('profiles').select('*').eq('id', u.id).single()
-      setProfile(data as UserProfile)
+    try {
+      const { data: { user: u } } = await supabase.auth.getUser()
+      setUser(u)
+      if (u) {
+        const { data, error } = await supabase.from('profiles').select('*').eq('id', u.id).single()
+        if (error) {
+          console.warn('Profile fetch failed (retry on refresh):', error.message)
+        }
+        setProfile(data as UserProfile ?? null)
+      }
+    } catch (err) {
+      console.warn('Profile load error (CORS/browser issue):', err)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   useEffect(() => { loadProfile() }, [])

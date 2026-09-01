@@ -1,19 +1,35 @@
-# FizioFit API gateway — zjednocuje Supabase služby pod jednu adresu
-# Browser volá http://62.238.118.51:3004/auth/v1/signup → auth:9999/signup
+# FizioFit API gateway
 :80 {
-	# CORS preflight — browser pýta pred POST/GET s apikey hlavičkou
+	# === PREFLIGHT (OPTIONS) — short-circuit, backend nezasahuje ===
 	@preflight {
 		method OPTIONS
 	}
-	header @preflight Access-Control-Allow-Origin "*"
-	header @preflight Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-	header @preflight Access-Control-Allow-Headers "apikey, authorization, content-type, x-client-info, x-supabase-api-version, x-sb-transport"
-	header @preflight Access-Control-Max-Age "86400"
-	respond @preflight 204
+	handle @preflight {
+		header Access-Control-Allow-Origin "*"
+		header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+		header Access-Control-Allow-Headers "apikey, authorization, content-type, x-client-info, x-supabase-api-version, x-sb-transport"
+		header Access-Control-Max-Age "86400"
+		respond 204
+	}
 
-	# Backend služby (GoTrue, PostgREST) už pridávajú CORS hlavičky
-	# Caddy ich nechá tak — neduplikujeme
+	# === VŠETKY AKTUÁLNE REQUESTY ===
+	# Odstráň backend CORS hlavičky (GoTrue, PostgREST si ich pridávajú samy)
+	# a nahraď ich jedinou správnou sadou
+	header {
+		-Access-Control-Allow-Origin
+		-Access-Control-Allow-Methods
+		-Access-Control-Allow-Headers
+		-Access-Control-Max-Age
+		-Access-Control-Expose-Headers
+		-Access-Control-Allow-Credentials
+	}
+	header Access-Control-Allow-Origin "*"
+	header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+	header Access-Control-Allow-Headers "apikey, authorization, content-type, x-client-info, x-supabase-api-version, x-sb-transport"
+	header Access-Control-Max-Age "86400"
+	header Access-Control-Expose-Headers "X-Total-Count, Link, X-Supabase-Api-Version"
 
+	# === PROXY ROUTES ===
 	handle /auth/v1/* {
 		uri strip_prefix /auth/v1
 		reverse_proxy auth:9999

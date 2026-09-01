@@ -11,13 +11,8 @@
 	header @preflight Access-Control-Max-Age "86400"
 	respond @preflight 204
 
-	# CORS na všetky proxied odpovede
-	header {
-		Access-Control-Allow-Origin *
-		Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-		Access-Control-Allow-Headers "apikey, authorization, content-type, x-client-info, x-supabase-api-version, x-sb-transport"
-		Access-Control-Max-Age 86400
-	}
+	# Backend služby (GoTrue, PostgREST) už pridávajú CORS hlavičky
+	# Caddy ich nechá tak — neduplikujeme
 
 	handle /auth/v1/* {
 		uri strip_prefix /auth/v1

@@ -41,6 +41,10 @@ export default function RegisterPage() {
       // Uložiť profilové dáta — použiť raw fetch s Bearer tokenom,
       // lebo @supabase/ssr cookies sa neposielajú na port :3004
       if (userId && token) {
+        // Uložiť token pre loadProfile fallback (sessionStorage pretrvá navigáciu)
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('sb-refresh-token', token)
+        }
         const res = await fetch('http://62.238.118.51:3004/rest/v1/profiles', {
           method: 'POST',
           headers: {

@@ -53,7 +53,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           {
             headers: {
               'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-              'Authorization': `Bearer ${u.access_token}`,
+              'Authorization': `Bearer ${session.access_token}`,
             },
           }
         )
